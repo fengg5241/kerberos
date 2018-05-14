@@ -1,0 +1,54 @@
+package com.sc.fm.com.cissvcauthentication.kerberos;
+
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
+
+
+/**
+ * Created by 1566515 on 4/19/2018.
+ */
+@Component
+@ConfigurationProperties(prefix = "app.auth.kerberos")  // Path to configuration in application.yml
+public class KerberosProperties {
+    private static final Logger LOG = LoggerFactory.getLogger(KerberosProperties.class);
+
+    private boolean debug = false;
+    private String servicePrincipal;
+    private String keytabLocation;
+
+    public boolean isDebug() {
+        return debug;
+    }
+
+    public void setDebug(final boolean debug) {
+        this.debug = debug;
+    }
+
+    public String getServicePrincipal() {
+        return servicePrincipal;
+    }
+
+    public void setServicePrincipal(final String servicePrincipal) {
+        this.servicePrincipal = servicePrincipal;
+    }
+
+    public String getKeytabLocation() {
+        return keytabLocation;
+    }
+
+    public void setKeytabLocation(final String keytabLocation) {
+        this.keytabLocation = keytabLocation;
+    }
+
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this)
+                .append("debug", debug)
+                .append("servicePrincipal", servicePrincipal)
+                .append("keytabLocation", keytabLocation)
+                .toString();
+    }
+}
