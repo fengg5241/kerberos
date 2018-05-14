@@ -1,0 +1,61 @@
+package com.sc.fm.com.cissvcauthentication.kerberos;
+import com.google.common.collect.Lists;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import static java.util.regex.Pattern.compile;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+
+/**
+ * Created by 1566515 on 4/19/2018.
+ */
+public class KerberosUserDetailsService implements UserDetailsService {
+    private static final Logger log = LoggerFactory.getLogger(KerberosUserDetailsService.class);
+
+    public static final PdcUser UNKNOWN_USER = new PdcUser("Unknown");
+
+    private final Pattern pattern;
+
+    public KerberosUserDetailsService() {
+        this.pattern = compile("^([^@]*)@.*");
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(final String username) throws UsernameNotFoundException {
+        final String psid = parsePsid(username);  // username parameter will look like: 1234@GDC_DEV.COM
+
+        if (isBlank(psid)) {
+            log.warn("Unable to find psid in username: [{}]", username);
+            return UNKNOWN_USER;
+        }
+
+        return new PdcUser(psid);
+    }
+
+    private String parsePsid(final String username) {
+        final Matcher matcher = pattern.matcher(username);
+        if (matcher.matches()) {
+            return matcher.group(1);
+        }
+        return "";
+    }
+
+    public static class PdcUser extends User {
+
+        public PdcUser(final String psid) {
+            super(psid, "Unknown", Lists.<GrantedAuthority>newArrayList());
+        }
+
+        public String getPsid() {
+            return getUsername();
+        }
+    }
+}
