@@ -1,0 +1,386 @@
+Copyright ©Flextrade UK Limited 2018 All Rights Reserved.
+
+The contents of this file are confidential and are intended solely for the use of the individual or entity to whom they were sent.
+
+No permission is granted to reproduce this file, or share it in any form, in part or whole, modified or otherwise.
+
+
+
+Code Review
+
+
+
+Systematic examination (often as peer review) of computer source code intended to find and fix 
+
+mistakes overlooked in the initial development phase, improving both the overall quality of 
+
+software and the developers' skills.
+
+
+
+The aim of this task is to examine a piece of code that your colleague has written. You must 
+
+critically analyse and report on the quality of the code and review it for any mistakes, bugs or 
+
+issues that you feel are present. You can make any comments, improvements or suggestions that you 
+
+feel are appropriate about style, design and logic.
+
+
+
+You can: 
+
+* Make inline comments in the code.
+
+* Add lines with suggestions or improvements. When doing this, do not add line numbers, or edit
+
+existing line numbers.
+
+
+
+You cannot:
+
+* Change any lines of code, other than to add inline comments
+
+* Add new line numbers or change existing line numbers
+
+
+
+Example
+
+1  for(Foo foo : foos) {
+
+2      Bar bar = foo.getBar(); // This is an inline comment.
+
+       // These are added lines or suggestions.
+
+       // Maybe we don't need to assign a variable to the Bar?
+
+       foo.getBar().discombobulate(); 
+
+3      bar.discombobulate();
+
+4  }
+
+
+
+There is no time or word limit but try to not spend too long completing the task. Treat it as if it
+
+were a real review in your day as a developer.
+
+
+
+This example is massively contrived and intentionally badly coded; don't expect code like this in 
+
+your day to day life.
+
+
+
+---
+
+Please put your comments on the code and design here:
+
+
+
+---
+
+
+
+1  public class OrderManager {
+
+2      private final OrderStore orderStore;
+
+3  
+
+4      public OrderManager(OrderStore orderStore) {
+
+5          this.orderStore = orderStore;
+
+6      }
+
+7  
+
+8      public void writeOutSmallOrders() {
+
+9          List<Order> orders = orderStore.getOrders();
+			// Maybe we don't need to assign a variable to the orders?
+			// Better add nullpoint check
+
+10         SmallOrderFilter filter = new SmallOrderFilter(new DefaultOrderWriter(), orders);
+
+11         filter.writeOutFiltrdAndPriceSortedOrders(new DefaultOrderWriter());
+
+12     }
+
+13 
+
+14     public void writeOutLargeOrders() {
+
+15         List<Order> orders = orderStore.getOrders();
+			// Maybe we don't need to assign a variable to the orders?
+			// Better add nullpoint check
+
+16         LargeOrderFilter filter = new LargeOrderFilter(new DefaultOrderWriter(), orders);
+
+17         filter.writeOutFiltrdAndPriceSortedOrders(new DefaultOrderWriter());
+
+18     }
+
+19 }
+
+
+
+
+
+1  public class LargeOrderFilter {
+
+2      private OrderWriter orderWriter;
+		// if don't provide set method, also can declare it final
+
+3      private List<Order> orders;
+
+4  
+
+5      public LargeOrderFilter(OrderWriter orderWriter, List<Order> orders) {
+
+6          filterSize = "100";
+			// better follow same coding way, use this.filterSize = "100";
+			// not ues magic number, better to difine as constant 
+7          this.orderWriter = orderWriter;
+
+8          this.orders = orders;
+
+9      }
+
+10 
+
+11     protected String filterSize;
+		// if no special requirement, just change type to int, no need to convert in Order class;
+
+12 
+
+13     public void writeOutFiltrdAndPriceSortedOrders(OrderWriter writer) {
+
+14         List<Order> filteredOrders = this.filterOrdersSmallerThan(orders, filterSize);
+
+15         Collections.sort(filteredOrders, new Comparator() {
+
+16                 @Override
+
+17                 public int compare(Object o1, Object o2) {
+
+18                     Order order1 = (Order)o1;
+
+19                     Order order2 = (Order)o2;
+
+20                     return (int)(order1.getPrice() - order2.getPrice());
+
+21                 }
+
+22             });
+		// Can let Order implements Comparable<Order>, 
+		// Then  @Override
+		//    public int compareTo(Order order) {
+		//        return price.compareTo(order.price);
+		 //   } 
+		 //Collections.sort(filteredOrders);  
+
+		 // Or add priceComparator
+		 //private static class PriceComparator implements Comparator<Order> {
+
+			    //@Override
+			    //public int compare(Order o1, Order o2) {
+			        //return p1.getPrice() - p2.getPrice();
+			    //}
+			//}
+			//Collections.sort(filteredOrders, new PriceComparator());
+
+			// The purpose is decoupling model and logic relationship.
+
+23         writer.writeOrders(filteredOrders);
+
+24     }
+
+25 
+
+26    protected List<Order> filterOrdersSmallerThan(List<Order> allOrders, String size) {
+
+27         List<Order> filtered = new ArrayList<Order>();
+			// Then variable name should be more meaningful, like filteredList
+28         for (int i = 0; i <= allOrders.size(); i++) {
+				// should change to i < allOrders.size(), otherwise will see java.lang.ArrayIndexOutOfBoundsException
+29             int number = orders.get(i).toNumber(size);
+				// can declare orders.get(i) as local variable, like Order order =  orders.get(i);
+				// if size type is int, no need toNumber
+30 
+
+31             if (allOrders.get(i).getSize() <= number) {
+
+32                 continue;
+
+33             } else {
+
+34                 filtered.add(orders.get(i));
+
+35             }
+
+36         }
+
+37 
+
+38         return filtered;
+
+39     }
+
+40 }
+
+
+
+1  public class SmallOrderFilter extends LargeOrderFilter
+	// actually smallOrderFilter should be same level with LargeOrderFilter, better to create super calss for both
+2  {
+
+3      public SmallOrderFilter(OrderWriter orderWriter, List<Order> orders) {
+
+4          super(orderWriter, orders);
+
+5          filterSize = "10";
+			// not ues magic number, better to difine as constant 
+6      }
+
+7  }
+
+
+
+
+
+1  public class Order
+
+2  {
+
+3      private double dPrice;
+		//The way to define variable name is not consistent, here is type short name + variable name
+4      private int iSize;
+
+5      private String sSymbol;
+
+6      
+
+7      public double getPrice() {
+
+8          return dPrice;
+
+9      }
+
+10     
+
+11     public void setPrice(double price) {
+
+12         dPrice = price;
+
+13     }
+
+14 
+
+15     public int getSize() {
+
+16         return iSize;
+
+17     }
+
+18     
+
+19     public void setSize(int size) {
+
+20         iSize = size;
+
+21     }
+
+22 
+
+23     public String getSymbol() {
+
+24         return sSymbol;
+
+25     }
+
+26     
+
+27     public void setSymbol(String symbol) {
+
+28         sSymbol = symbol;
+
+29     }
+
+30     
+
+31     public int toNumber(String Input) {
+
+32         boolean canBeConverted = false;
+
+33         int n = 0;
+
+34         try 
+
+35         {
+
+36             n = Integer.parseInt(Input);
+
+37             canBeConverted = true;
+
+38         }
+
+39         catch (Exception ex)
+
+40         {
+
+41         }
+
+42 
+
+43         if (canBeConverted == true) {
+				// can change if(canBeConverted)
+44             return n;
+
+45         } else {
+
+46             return 0;
+
+47        }
+
+48     }
+
+49 }
+
+
+
+
+
+// These are interfaces / stubs that already exist in the system.
+
+// They're out of scope of the code review.
+
+
+
+public interface OrderWriter {
+
+    void writeOrders(Collection<Order> orders);
+
+}
+
+
+
+public class DefaultOrderWriter implements OrderWriter {
+
+    public void writeOrders(Collection<Order> orders) {}
+
+}
+
+
+
+public interface OrderStore {
+
+    List<Order> getOrders();
+
+}
+
